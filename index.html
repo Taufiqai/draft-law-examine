@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>আইনের খসড়া পরীক্ষা — AI ড্যাশবোর্ড | Law Draft Scrutiny AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#060B18; --panel:#0B1526; --panel2:#101E36; --line:rgba(217,178,74,.18);
+  --line2:rgba(43,217,232,.14); --gold:#D9B24A; --goldB:#F0CE6E; --cyan:#2BD9E8;
+  --ink:#E9EFF8; --muted:#8FA3BF; --dim:#5C7191;
+  --ok:#4ED9A4; --warn:#F2B84B; --bad:#F26D6D;
+  --bn:'Hind Siliguri',sans-serif; --disp:'Rajdhani','Hind Siliguri',sans-serif;
+  --en:'IBM Plex Sans','Hind Siliguri',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--ink);font-family:var(--bn);font-size:15px;line-height:1.65;
+  background-image:radial-gradient(1100px 500px at 85% -10%,rgba(43,217,232,.06),transparent 60%),
+  radial-gradient(900px 480px at -10% 0%,rgba(217,178,74,.05),transparent 55%)}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line);padding:18px 22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(16,30,54,.75),rgba(6,11,24,.2))}
+.monogram{width:52px;height:52px;border:1.5px solid var(--gold);border-radius:50%;display:grid;place-items:center;
+  font-family:var(--disp);font-weight:700;color:var(--gold);font-size:13px;letter-spacing:.5px;flex:none;
+  box-shadow:0 0 0 4px rgba(217,178,74,.08)}
+.h-title{flex:1;min-width:240px}
+.h-eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:2.5px;font-size:11px;color:var(--cyan)}
+.h-main{font-size:21px;font-weight:700;color:var(--goldB);line-height:1.3}
+.h-sub{font-size:12px;color:var(--muted)}
+.langtog{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.langtog button{background:transparent;color:var(--muted);border:0;padding:6px 16px;font-size:13px;font-weight:600}
+.langtog button.on{background:var(--gold);color:#1A1608}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:22px}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:22px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:1.8px;color:var(--gold);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:7px;height:7px;background:var(--cyan);transform:rotate(45deg);flex:none}
+
+/* ---------- inputs ---------- */
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+input[type=text],select,textarea{width:100%;background:var(--void);border:1px solid rgba(143,163,191,.25);
+  border-radius:8px;color:var(--ink);padding:9px 11px;font-family:var(--bn);font-size:14px}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);outline:none}
+textarea{min-height:230px;resize:vertical;line-height:1.7}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:9px;padding:12px 18px;font-weight:700;font-size:15px;font-family:var(--bn)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--goldB));color:#1A1608;width:100%;margin-top:16px;
+  box-shadow:0 4px 18px rgba(217,178,74,.25)}
+.btn-gold:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--cyan);padding:7px 13px;font-size:13px;border-radius:8px}
+.btn-ghost:hover{background:rgba(43,217,232,.08)}
+.hint{font-size:12px;color:var(--dim);margin-top:8px}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.chk input{accent-color:var(--gold)}
+
+/* ---------- pipeline stepper ---------- */
+.steps{margin-top:16px;display:none;flex-direction:column;gap:8px}
+.steps.show{display:flex}
+.step{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--dim);padding:7px 10px;border-radius:8px;border:1px solid transparent}
+.step .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:none}
+.step.run{color:var(--cyan);border-color:var(--line2);background:rgba(43,217,232,.05)}
+.step.run .dot{background:var(--cyan);animation:pulse 1s infinite}
+.step.done{color:var(--ok)}
+.step.done .dot{background:var(--ok)}
+.step.err{color:var(--bad)}
+.step.err .dot{background:var(--bad)}
+.step .retry{margin-left:auto}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:9px;
+  padding:9px 16px;font-size:14px;font-weight:600;font-family:var(--bn)}
+.tabs button.on{color:#1A1608;background:linear-gradient(135deg,var(--gold),var(--goldB));border-color:var(--goldB)}
+.pane{display:none}
+.pane.on{display:block}
+.empty{padding:60px 20px;text-align:center;color:var(--dim);font-size:14px;border:1px dashed rgba(143,163,191,.25);border-radius:14px}
+
+/* ---------- verdict seal ---------- */
+.hero{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:center}
+@media(max-width:700px){.hero{grid-template-columns:1fr;justify-items:center}}
+.seal-wrap{position:relative;width:210px;height:210px}
+.seal{transform:scale(.4) rotate(-14deg);opacity:0;transition:transform .5s cubic-bezier(.2,1.6,.4,1),opacity .3s}
+.seal.stamped{transform:scale(1) rotate(0);opacity:1}
+.v-title{font-size:24px;font-weight:700;line-height:1.35}
+.v-reason{color:var(--muted);font-size:14px;margin-top:8px}
+.v-avg{font-family:var(--mono);font-size:13px;color:var(--cyan);margin-top:10px}
+
+/* ---------- score ledger ---------- */
+.ledger{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.lrow{display:grid;grid-template-columns:200px 1fr 46px;gap:12px;align-items:center;font-size:13px}
+@media(max-width:700px){.lrow{grid-template-columns:130px 1fr 42px;font-size:12px}}
+.lname{color:var(--muted)}
+.lbar{height:9px;background:rgba(143,163,191,.12);border-radius:5px;overflow:hidden}
+.lfill{height:100%;width:0;border-radius:5px;transition:width .9s ease}
+.lval{font-family:var(--mono);color:var(--goldB);text-align:right;font-size:12px}
+.lnote{grid-column:1/-1;font-size:12px;color:var(--dim);margin:-4px 0 2px;padding-left:2px;display:none}
+.lrow.open .lnote{display:block}
+.lrow{cursor:pointer}
+
+/* ---------- chips / tables ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line2);border-radius:8px;padding:8px 11px;font-size:12.5px;background:rgba(43,217,232,.04)}
+.chip b{color:var(--cyan);font-family:var(--mono);font-weight:500}
+.chip .st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+.tb th{font-family:var(--disp);text-transform:uppercase;letter-spacing:1px;font-size:11px;color:var(--gold);
+  text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tb td{padding:9px 10px;border-bottom:1px solid rgba(143,163,191,.1);vertical-align:top;color:var(--ink)}
+.tb td:first-child{font-family:var(--mono);color:var(--cyan);white-space:nowrap;font-size:12px}
+.sev{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700}
+.sev.high{background:rgba(242,109,109,.15);color:var(--bad)}
+.sev.mid{background:rgba(242,184,75,.15);color:var(--warn)}
+.sev.low{background:rgba(78,217,164,.14);color:var(--ok)}
+.mt{margin-top:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+ul.plain{list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.plain li{padding-left:18px;position:relative;font-size:13.5px}
+ul.plain li::before{content:"◆";position:absolute;left:0;color:var(--gold);font-size:9px;top:5px}
+
+/* ---------- chat ---------- */
+.chatlog{max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px;margin-bottom:14px}
+.msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:14px;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:rgba(217,178,74,.13);border:1px solid var(--line)}
+.msg.a{align-self:flex-start;background:var(--panel2);border:1px solid var(--line2)}
+.chatbar{display:flex;gap:10px}
+.chatbar input{flex:1}
+.chatbar .btn-gold{width:auto;margin-top:0;padding:10px 20px}
+
+/* ---------- report (print) ---------- */
+.report-tools{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+#reportPaper{background:#FDFCF7;color:#141414;border-radius:10px;padding:42px 48px;font-family:'Noto Serif Bengali',var(--bn);font-size:14px;line-height:1.8}
+#reportPaper h3{text-align:center;font-size:15px;margin-bottom:2px}
+#reportPaper h4{font-size:14px;margin:20px 0 8px;border-bottom:1.5px solid #333;padding-bottom:3px}
+#reportPaper table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+#reportPaper th,#reportPaper td{border:1px solid #555;padding:6px 8px;text-align:left;vertical-align:top}
+#reportPaper th{background:#EDE8D8}
+#reportPaper .c{text-align:center}
+#reportPaper .memoline{display:flex;justify-content:space-between;margin:14px 0 6px;font-size:13px}
+@media print{
+  body{background:#fff}
+  header,.grid>.card:first-child,.tabs,.report-tools,#followupCard,.steps{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .grid{display:block}
+  .pane{display:none!important}
+  #pane-report{display:block!important}
+  .card{border:0;padding:0;background:#fff}
+  .card h2{display:none}
+  #reportPaper{border-radius:0;padding:10mm 6mm}
+}
+footer{padding:26px 22px;text-align:center;color:var(--dim);font-size:12px;border-top:1px solid var(--line);margin-top:30px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(43,217,232,.3);border-top-color:var(--cyan);border-radius:50%;animation:rot .8s linear infinite;vertical-align:-2px}
+@keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="monogram">গব</div>
+  <div class="h-title">
+    <div class="h-eyebrow" data-i="eyebrow">Cabinet Division · Inter-ministerial Committee</div>
+    <div class="h-main" data-i="title">আইনের খসড়া পরীক্ষা-নিরীক্ষা — এআই ড্যাশবোর্ড</div>
+    <div class="h-sub" data-i="subtitle">বাংলাদেশের সংবিধান ও bdlaws.gov.bd-ভিত্তিক স্বয়ংক্রিয় পর্যালোচনা সহায়ক</div>
+  </div>
+  <div class="langtog" role="group" aria-label="Language">
+    <button id="lgBn" class="on" onclick="setLang('bn')">বাং</button>
+    <button id="lgEn" onclick="setLang('en')">EN</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="grid">
+
+  <!-- ============ LEFT: INPUT ============ -->
+  <div class="card" id="inputCard">
+    <h2 data-i="s1">১. খসড়ার বিবরণ ও পাঠ</h2>
+
+    <label data-i="lblName">১.১ খসড়া আইনের নাম</label>
+    <input type="text" id="fName" placeholder="যেমন: উপাত্ত সুরক্ষা আইন, ২০২৬">
+
+    <div class="row2">
+      <div>
+        <label data-i="lblMin">১.২ প্রেরণকারী মন্ত্রণালয়/বিভাগ</label>
+        <input type="text" id="fMinistry" placeholder="ডাক ও টেলিযোগাযোগ বিভাগ">
+      </div>
+      <div>
+        <label data-i="lblType">১.৩ খসড়ার ধরন</label>
+        <select id="fType">
+          <option>আইন</option><option>অধ্যাদেশ</option><option>বিধিমালা</option>
+          <option>প্রজ্ঞাপন</option><option>নীতিমালা</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label data-i="lblRef">১.৫ রেফারেন্স/স্মারক নং</label>
+        <input type="text" id="fRef" placeholder="০৪.০০.০০০০.…">
+      </div>
+      <div>
+        <label data-i="lblDate">১.৪ প্রাপ্তির তারিখ</label>
+        <input type="text" id="fDate" placeholder="দিন-মাস-বছর">
+      </div>
+    </div>
+
+    <label data-i="lblDraft">খসড়ার পূর্ণ পাঠ (ধারাসহ)</label>
+    <textarea id="fDraft" placeholder="খসড়া আইনের সম্পূর্ণ পাঠ এখানে পেস্ট করুন — ধারা ১, ধারা ২ … আকারে থাকলে ধারাভিত্তিক বিশ্লেষণ নিখুঁত হবে।"></textarea>
+
+    <div class="chk"><input type="checkbox" id="fWeb" checked>
+      <span data-i="lblWeb">bdlaws.gov.bd-এ সংশ্লিষ্ট প্রচলিত আইন ওয়েব-অনুসন্ধান করবে</span></div>
+
+    <button class="btn btn-gold" id="runBtn" onclick="runPipeline()" data-i="btnRun">⚖ এআই পরীক্ষা-নিরীক্ষা চালান</button>
+    <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="loadSample()" data-i="btnSample">নমুনা খসড়া লোড করুন (ডেমো)</button>
+    <div class="hint" data-i="hint">বিশ্লেষণ ৪টি ধাপে চলে — মূল পর্যালোচনা → ধারাভিত্তিক → আর্থিক-প্রশাসনিক → bdlaws সংশ্লিষ্ট আইন। ফলাফল কমিটির টেমপ্লেট-প্রতিবেদনে স্বয়ংক্রিয়ভাবে বসে যায়।</div>
+
+    <div class="steps" id="steps">
+      <div class="step" id="st1"><span class="dot"></span><span data-i="stp1">ধাপ ১ · মূল পর্যালোচনা (১০ ক্ষেত্র + সাংবিধানিক যাচাই)</span><button class="btn-ghost retry" style="display:none" onclick="retry(1)">↻</button></div>
+      <div class="step" id="st2"><span class="dot"></span><span data-i="stp2">ধাপ ২ · ধারাভিত্তিক পরীক্ষা ও সংশোধনী</span><button class="btn-ghost retry" style="display:none" onclick="retry(2)">↻</button></div>
+      <div class="step" id="st3"><span class="dot"></span><span data-i="stp3">ধাপ ৩ · আর্থিক-প্রশাসনিক বিশ্লেষণ ও সুপারিশ</span><button class="btn-ghost retry" style="display:none" onclick="retry(3)">↻</button></div>
+      <div class="step" id="st4"><span class="dot"></span><span data-i="stp4">ধাপ ৪ · bdlaws.gov.bd সংশ্লিষ্ট আইন অনুসন্ধান</span><button class="btn-ghost retry" style="display:none" onclick="retry(4)">↻</button></div>
+    </div>
+  </div>
+
+  <!-- ============ RIGHT: RESULTS ============ -->
+  <div>
+    <div class="tabs" role="tablist">
+      <button class="on" onclick="tab('dash',this)" data-i="tbDash">ড্যাশবোর্ড</button>
+      <button onclick="tab('sec',this)" data-i="tbSec">ধারাভিত্তিক</button>
+      <button onclick="tab('fin',this)" data-i="tbFin">আর্থিক ও সুপারিশ</button>
+      <button onclick="tab('report',this)" data-i="tbRep">কমিটি প্রতিবেদন</button>
+      <button onclick="tab('chat',this)" data-i="tbChat">ফলো-আপ প্রশ্ন</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="pane on" id="pane-dash">
+      <div class="empty" id="dashEmpty" data-i="empty">বাম পাশে খসড়া দিয়ে "এআই পরীক্ষা-নিরীক্ষা চালান" চাপুন — কমিটির ১০টি পর্যালোচনা-ক্ষেত্রে স্কোর, সাংবিধানিক যাচাই ও চূড়ান্ত মতামতের সিলমোহর এখানে দেখা যাবে।</div>
+      <div id="dashBody" style="display:none">
+        <div class="card">
+          <h2 data-i="s9">৯. চূড়ান্ত মতামত</h2>
+          <div class="hero">
+            <div class="seal-wrap"><svg id="sealSvg" class="seal" viewBox="0 0 210 210" width="210" height="210" aria-label="verdict seal"></svg></div>
+            <div>
+              <div class="v-title" id="vTitle"></div>
+              <div class="v-reason" id="vReason"></div>
+              <div class="v-avg" id="vAvg"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt">
+          <h2 data-i="s3">৩. পর্যালোচনার পরিধি — ১০ ক্ষেত্রের স্কোর</h2>
+          <div class="ledger" id="ledger"></div>
+          <div class="hint" data-i="ledgerHint">প্রতিটি সারিতে ক্লিক করলে কমিটির পর্যবেক্ষণ-নোট খুলবে।</div>
+        </div>
+        <div class="two mt">
+          <div class="card">
+            <h2 data-i="constH">৩.১ সাংবিধানিক সামঞ্জস্য</h2>
+            <div class="chips" id="constChips"></div>
+            <div class="hint" style="margin-top:12px">📜 <a href="http://bdlaws.minlaw.gov.bd/act-367.html" target="_blank" rel="noopener" data-i="constLink">গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান — bdlaws (Act No. — 1972)</a></div>
+          </div>
+          <div class="card">
+            <h2 data-i="relH">৩.২ সংশ্লিষ্ট প্রচলিত আইন (bdlaws)</h2>
+            <div class="chips" id="relChips"><span class="hint" data-i="relWait">ধাপ ৪ সম্পন্ন হলে এখানে তালিকা আসবে…</span></div>
+            <div class="hint" style="margin-top:12px">🔎 <a href="http://bdlaws.minlaw.gov.bd/laws-of-bangladesh-alphabetical-index.html" target="_blank" rel="noopener" data-i="relLink">bdlaws.gov.bd — বাংলাদেশের সকল আইনের বর্ণানুক্রমিক সূচি</a></div>
+          </div>
+        </div>
+        <div class="card mt">
+          <h2 data-i="s5">৫. মূল পর্যবেক্ষণ</h2>
+          <ul class="plain" id="keyObs"><li class="hint" data-i="obsWait">ধাপ ৩ সম্পন্ন হলে আসবে…</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTIONS -->
+    <div class="pane" id="pane-sec">
+      <div class="empty" id="secEmpty" data-i="empty2">ধাপ ২ সম্পন্ন হলে ধারাভিত্তিক পরীক্ষা-নিরীক্ষা (টেমপ্লেট অনুচ্ছেদ ৪) ও সংশোধনী প্রস্তাব (অনুচ্ছেদ ৮) এখানে দেখা যাবে।</div>
+      <div id="secBody" style="display:none">
+        <div class="card">
+          <h2 data-i="s4">৪. ধারাভিত্তিক পরীক্ষা-নিরীক্ষা</h2>
+          <div style="overflow-x:auto"><table class="tb"><thead><tr>
+            <th data-i="th1">ধারা</th><th data-i="th2">সারাংশ</th><th data-i="th3">পর্যবেক্ষণ</th>
+            <th data-i="th4">সুপারিশ</th><th data-i="th5">গুরুত্ব</th>
+          </tr></thead><tbody id="secRows"></tbody></table></div>
+        </div>
+        <div class="card mt">
+          <h2 data-i="s8">৮. সংশোধনী প্রস্তাব</h2>
+          <div style="overflow-x:auto"><table class="tb"><thead><tr>
+            <th data-i="th1">ধারা</th><th data-i="th6">প্রস্তাবিত সংশোধন</th><th data-i="th7">যুক্তি</th>
+          </tr></thead><tbody id="amendRows"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIN -->
+    <div class="pane" id="pane-fin">
+      <div class="empty" id="finEmpty" data-i="empty3">ধাপ ৩ সম্পন্ন হলে আর্থিক-প্রশাসনিক বিশ্লেষণ (অনুচ্ছেদ ৭), আন্তঃমন্ত্রণালয় মন্তব্য (অনুচ্ছেদ ৬) ও সুপারিশ (অনুচ্ছেদ ১০) এখানে আসবে।</div>
+      <div id="finBody" style="display:none">
+        <div class="card">
+          <h2 data-i="s7">৭. আর্থিক ও প্রশাসনিক বিশ্লেষণ</h2>
+          <table class="tb"><tbody id="finRows"></tbody></table>
+        </div>
+        <div class="card mt">
+          <h2 data-i="s6">৬. সম্ভাব্য আন্তঃমন্ত্রণালয় মন্তব্য</h2>
+          <div style="overflow-x:auto"><table class="tb"><thead><tr>
+            <th data-i="th8">মন্ত্রণালয়/বিভাগ</th><th data-i="th9">সম্ভাব্য অবস্থান</th><th data-i="th10">মন্তব্য</th>
+          </tr></thead><tbody id="imRows"></tbody></table></div>
+          <div class="hint" data-i="imHint">⚠ এটি এআই-অনুমিত সম্ভাব্য অবস্থান — প্রকৃত মতামত সংশ্লিষ্ট মন্ত্রণালয় থেকে সংগ্রহ করতে হবে।</div>
+        </div>
+        <div class="card mt">
+          <h2 data-i="s10">১০. সুপারিশ</h2>
+          <ul class="plain" id="recList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="pane" id="pane-report">
+      <div class="card" id="reportCard">
+        <h2 data-i="repH">টেমপ্লেট অনুযায়ী কমিটি প্রতিবেদন</h2>
+        <div class="report-tools">
+          <button class="btn-ghost" onclick="window.print()" data-i="btnPrint">🖨 প্রিন্ট / PDF</button>
+          <button class="btn-ghost" onclick="copyReport()" data-i="btnCopy">⧉ পাঠ কপি করুন</button>
+        </div>
+        <div id="reportPaper"><p class="c" style="padding:40px;color:#777" data-i="repWait">বিশ্লেষণ সম্পন্ন হলে "আইনের খসড়া পরীক্ষা-নিরীক্ষা পূর্বক মতামত প্রতিবেদন" এখানে টেমপ্লেট-ফরম্যাটে তৈরি হবে।</p></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="pane" id="pane-chat">
+      <div class="card" id="followupCard">
+        <h2 data-i="chatH">কমিটি-সহায়ক এআইকে ফলো-আপ প্রশ্ন</h2>
+        <div class="chatlog" id="chatlog">
+          <div class="msg a" data-i="chatHello">বিশ্লেষণ শেষে খসড়া সম্পর্কে যেকোনো প্রশ্ন করুন — যেমন: "ধারা ৫-এর দণ্ডবিধান কি অনুচ্ছেদ ৩৫-এর সঙ্গে সাংঘর্ষিক?", "এই খসড়ার সঙ্গে তথ্য ও যোগাযোগ প্রযুক্তি আইন, ২০০৬-এর ওভারল্যাপ কোথায়?"</div>
+        </div>
+        <div class="chatbar">
+          <input type="text" id="chatIn" placeholder="প্রশ্ন লিখুন…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-gold" onclick="sendChat()" data-i="btnSend">পাঠান</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<footer>
+  <span data-i="foot">সহকারী · Shohokari — আন্তঃমন্ত্রণালয় আইন-পরীক্ষা সহায়ক · সূত্র: গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান ও bdlaws.gov.bd · এআই-উৎপন্ন বিশ্লেষণ সহায়ক মাত্র, আইনি মতামতের বিকল্প নয়</span>
+</footer>
+
+<script>
+/* ================= state & i18n ================= */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)??mem[k]??null}catch(e){return mem[k]??null}},
+  set(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}}
+};
+const S={lang:store.get('ain_lang')||'bn',s1:null,s2:null,s3:null,s4:null,chat:[]};
+
+const AREAS=[
+ {id:'const',bn:'৩.১ সাংবিধানিক সামঞ্জস্য',en:'3.1 Constitutional consistency'},
+ {id:'laws',bn:'৩.২ প্রচলিত আইনের সঙ্গে সামঞ্জস্য',en:'3.2 Harmony with existing laws'},
+ {id:'defs',bn:'৩.৩ সংজ্ঞা ও পরিভাষার স্পষ্টতা',en:'3.3 Clarity of definitions'},
+ {id:'admin',bn:'৩.৪ প্রশাসনিক কাঠামো ও এখতিয়ার',en:'3.4 Administrative structure & jurisdiction'},
+ {id:'fiscal',bn:'৩.৫ আর্থিক প্রভাব',en:'3.5 Financial impact'},
+ {id:'impl',bn:'৩.৬ বাস্তবায়নযোগ্যতা',en:'3.6 Implementability'},
+ {id:'coord',bn:'৩.৭ আন্তঃমন্ত্রণালয় সমন্বয়',en:'3.7 Inter-ministerial coordination'},
+ {id:'rights',bn:'৩.৮ নাগরিক অধিকার ও প্রক্রিয়াগত ন্যায়',en:'3.8 Citizen rights & due process'},
+ {id:'penalty',bn:'৩.৯ শাস্তি, আপিল ও প্রতিকার',en:'3.9 Penalties, appeals & remedies'},
+ {id:'rules',bn:'৩.১০ বিধি প্রণয়নের ক্ষমতা',en:'3.10 Rule-making power'}];
+
+const VERDICTS={
+ acceptable:{bn:'নীতিগতভাবে গ্রহণযোগ্য',en:'Acceptable in principle',c:'#4ED9A4'},
+ acceptable_with_amendments:{bn:'সংশোধন সাপেক্ষে গ্রহণযোগ্য',en:'Acceptable subject to amendments',c:'#D9B24A'},
+ reconsider:{bn:'অধিকতর পুনর্বিবেচনা প্রয়োজন',en:'Requires further reconsideration',c:'#F2B84B'},
+ not_acceptable:{bn:'বর্তমান অবস্থায় গ্রহণযোগ্য নয়',en:'Not acceptable in present form',c:'#F26D6D'}};
+
+const CONST_REF="মূল রক্ষাকবচ-অনুচ্ছেদ: ৭(সংবিধানের প্রাধান্য) ২৬(মৌলিক অধিকারের সঙ্গে অসামঞ্জস্যপূর্ণ আইন বাতিল) ২৭(সমতা) ৩১(আইনের আশ্রয়) ৩২(জীবন-স্বাধীনতা) ৩৩(গ্রেপ্তার রক্ষাকবচ) ৩৫(বিচার ও দণ্ড সুরক্ষা) ৩৬-৩৯(চলাফেরা,সমাবেশ,সংগঠন,বাক-স্বাধীনতা) ৪০(পেশা) ৪২(সম্পত্তি) ৪৩(গৃহ ও যোগাযোগের গোপনীয়তা) ৬৫(আইনপ্রণয়ন ও অর্পিত ক্ষমতা) ৮০(বিল) ৮১(অর্থবিল) ৯৩(অধ্যাদেশ) ১০২(রিট) ১৫২(ব্যাখ্যা)";
+
+const I18N={
+ bn:{eyebrow:'মন্ত্রিপরিষদ বিভাগ · আন্তঃমন্ত্রণালয় কমিটি',title:'আইনের খসড়া পরীক্ষা-নিরীক্ষা — এআই ড্যাশবোর্ড',
+  subtitle:'বাংলাদেশের সংবিধান ও bdlaws.gov.bd-ভিত্তিক স্বয়ংক্রিয় পর্যালোচনা সহায়ক',
+  s1:'১. খসড়ার বিবরণ ও পাঠ',lblName:'১.১ খসড়া আইনের নাম',lblMin:'১.২ প্রেরণকারী মন্ত্রণালয়/বিভাগ',lblType:'১.৩ খসড়ার ধরন',
+  lblRef:'১.৫ রেফারেন্স/স্মারক নং',lblDate:'১.৪ প্রাপ্তির তারিখ',lblDraft:'খসড়ার পূর্ণ পাঠ (ধারাসহ)',
+  lblWeb:'bdlaws.gov.bd-এ সংশ্লিষ্ট প্রচলিত আইন ওয়েব-অনুসন্ধান করবে',btnRun:'⚖ এআই পরীক্ষা-নিরীক্ষা চালান',
+  btnSample:'নমুনা খসড়া লোড করুন (ডেমো)',
+  hint:'বিশ্লেষণ ৪টি ধাপে চলে — মূল পর্যালোচনা → ধারাভিত্তিক → আর্থিক-প্রশাসনিক → bdlaws সংশ্লিষ্ট আইন। ফলাফল কমিটির টেমপ্লেট-প্রতিবেদনে স্বয়ংক্রিয়ভাবে বসে যায়।',
+  stp1:'ধাপ ১ · মূল পর্যালোচনা (১০ ক্ষেত্র + সাংবিধানিক যাচাই)',stp2:'ধাপ ২ · ধারাভিত্তিক পরীক্ষা ও সংশোধনী',
+  stp3:'ধাপ ৩ · আর্থিক-প্রশাসনিক বিশ্লেষণ ও সুপারিশ',stp4:'ধাপ ৪ · bdlaws.gov.bd সংশ্লিষ্ট আইন অনুসন্ধান',
+  tbDash:'ড্যাশবোর্ড',tbSec:'ধারাভিত্তিক',tbFin:'আর্থিক ও সুপারিশ',tbRep:'কমিটি প্রতিবেদন',tbChat:'ফলো-আপ প্রশ্ন',
+  empty:'বাম পাশে খসড়া দিয়ে "এআই পরীক্ষা-নিরীক্ষা চালান" চাপুন — কমিটির ১০টি পর্যালোচনা-ক্ষেত্রে স্কোর, সাংবিধানিক যাচাই ও চূড়ান্ত মতামতের সিলমোহর এখানে দেখা যাবে।',
+  empty2:'ধাপ ২ সম্পন্ন হলে ধারাভিত্তিক পরীক্ষা-নিরীক্ষা (টেমপ্লেট অনুচ্ছেদ ৪) ও সংশোধনী প্রস্তাব (অনুচ্ছেদ ৮) এখানে দেখা যাবে।',
+  empty3:'ধাপ ৩ সম্পন্ন হলে আর্থিক-প্রশাসনিক বিশ্লেষণ (অনুচ্ছেদ ৭), আন্তঃমন্ত্রণালয় মন্তব্য (অনুচ্ছেদ ৬) ও সুপারিশ (অনুচ্ছেদ ১০) এখানে আসবে।',
+  s9:'৯. চূড়ান্ত মতামত',s3:'৩. পর্যালোচনার পরিধি — ১০ ক্ষেত্রের স্কোর',ledgerHint:'প্রতিটি সারিতে ক্লিক করলে কমিটির পর্যবেক্ষণ-নোট খুলবে।',
+  constH:'৩.১ সাংবিধানিক সামঞ্জস্য',constLink:'গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান — bdlaws',relH:'৩.২ সংশ্লিষ্ট প্রচলিত আইন (bdlaws)',
+  relWait:'ধাপ ৪ সম্পন্ন হলে এখানে তালিকা আসবে…',relLink:'bdlaws.gov.bd — বাংলাদেশের সকল আইনের বর্ণানুক্রমিক সূচি',
+  s5:'৫. মূল পর্যবেক্ষণ',obsWait:'ধাপ ৩ সম্পন্ন হলে আসবে…',s4:'৪. ধারাভিত্তিক পরীক্ষা-নিরীক্ষা',s8:'৮. সংশোধনী প্রস্তাব',
+  th1:'ধারা',th2:'সারাংশ',th3:'পর্যবেক্ষণ',th4:'সুপারিশ',th5:'গুরুত্ব',th6:'প্রস্তাবিত সংশোধন',th7:'যুক্তি',
+  th8:'মন্ত্রণালয়/বিভাগ',th9:'সম্ভাব্য অবস্থান',th10:'মন্তব্য',s7:'৭. আর্থিক ও প্রশাসনিক বিশ্লেষণ',
+  s6:'৬. সম্ভাব্য আন্তঃমন্ত্রণালয় মন্তব্য',imHint:'⚠ এটি এআই-অনুমিত সম্ভাব্য অবস্থান — প্রকৃত মতামত সংশ্লিষ্ট মন্ত্রণালয় থেকে সংগ্রহ করতে হবে।',
+  s10:'১০. সুপারিশ',repH:'টেমপ্লেট অনুযায়ী কমিটি প্রতিবেদন',btnPrint:'🖨 প্রিন্ট / PDF',btnCopy:'⧉ পাঠ কপি করুন',
+  repWait:'বিশ্লেষণ সম্পন্ন হলে "আইনের খসড়া পরীক্ষা-নিরীক্ষা পূর্বক মতামত প্রতিবেদন" এখানে টেমপ্লেট-ফরম্যাটে তৈরি হবে।',
+  chatH:'কমিটি-সহায়ক এআইকে ফলো-আপ প্রশ্ন',
+  chatHello:'বিশ্লেষণ শেষে খসড়া সম্পর্কে যেকোনো প্রশ্ন করুন — যেমন: "ধারা ৫-এর দণ্ডবিধান কি অনুচ্ছেদ ৩৫-এর সঙ্গে সাংঘর্ষিক?"',
+  btnSend:'পাঠান',foot:'সহকারী · Shohokari — আন্তঃমন্ত্রণালয় আইন-পরীক্ষা সহায়ক · সূত্র: গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান ও bdlaws.gov.bd · এআই-উৎপন্ন বিশ্লেষণ সহায়ক মাত্র, আইনি মতামতের বিকল্প নয়',
+  needDraft:'খসড়ার পাঠ দিন — অন্তত কয়েকটি ধারা।',analysing:'বিশ্লেষণ চলছে…',errStage:'এই ধাপে ত্রুটি — ↻ চেপে আবার চেষ্টা করুন।',
+  copied:'প্রতিবেদনের পাঠ কপি হয়েছে ✓'},
+ en:{eyebrow:'Cabinet Division · Inter-ministerial Committee',title:'Law Draft Scrutiny — AI Dashboard',
+  subtitle:'Automated review assistant grounded in the Constitution of Bangladesh & bdlaws.gov.bd',
+  s1:'1. Draft details & text',lblName:'1.1 Name of draft law',lblMin:'1.2 Sponsoring ministry/division',lblType:'1.3 Type of draft',
+  lblRef:'1.5 Reference/memo no.',lblDate:'1.4 Date received',lblDraft:'Full text of the draft (with sections)',
+  lblWeb:'Web-search bdlaws.gov.bd for related existing laws',btnRun:'⚖ Run AI scrutiny',btnSample:'Load sample draft (demo)',
+  hint:'Analysis runs in 4 stages — core review → section-by-section → fiscal-administrative → bdlaws related laws. Results auto-populate the committee template report.',
+  stp1:'Stage 1 · Core review (10 areas + constitutional check)',stp2:'Stage 2 · Section-by-section & amendments',
+  stp3:'Stage 3 · Fiscal-administrative analysis & recommendations',stp4:'Stage 4 · bdlaws.gov.bd related-law search',
+  tbDash:'Dashboard',tbSec:'Section-wise',tbFin:'Fiscal & recs',tbRep:'Committee report',tbChat:'Follow-up',
+  empty:'Paste a draft on the left and press "Run AI scrutiny" — scores across the committee\'s 10 review areas, constitutional checks and the verdict seal will appear here.',
+  empty2:'Section-by-section examination (template §4) and amendment proposals (§8) will appear once Stage 2 completes.',
+  empty3:'Fiscal-administrative analysis (§7), inter-ministerial comments (§6) and recommendations (§10) will appear once Stage 3 completes.',
+  s9:'9. Final opinion',s3:'3. Scope of review — scores across 10 areas',ledgerHint:'Click any row to open the committee note.',
+  constH:'3.1 Constitutional consistency',constLink:'Constitution of Bangladesh — bdlaws',relH:'3.2 Related existing laws (bdlaws)',
+  relWait:'The list will appear after Stage 4…',relLink:'bdlaws.gov.bd — alphabetical index of all laws of Bangladesh',
+  s5:'5. Key observations',obsWait:'Appears after Stage 3…',s4:'4. Section-by-section examination',s8:'8. Amendment proposals',
+  th1:'Section',th2:'Summary',th3:'Observation',th4:'Recommendation',th5:'Severity',th6:'Proposed amendment',th7:'Rationale',
+  th8:'Ministry/Division',th9:'Likely position',th10:'Comment',s7:'7. Fiscal & administrative analysis',
+  s6:'6. Likely inter-ministerial comments',imHint:'⚠ AI-inferred likely positions — actual opinions must be collected from the ministries concerned.',
+  s10:'10. Recommendations',repH:'Committee report per the template',btnPrint:'🖨 Print / PDF',btnCopy:'⧉ Copy text',
+  repWait:'Once analysis completes, the "Law Draft Examination & Opinion Report" is generated here in the template format.',
+  chatH:'Ask the committee-assistant AI',
+  chatHello:'After analysis, ask anything about the draft — e.g. "Does the penalty in §5 conflict with Article 35?"',
+  btnSend:'Send',foot:'Shohokari — inter-ministerial law scrutiny assistant · Sources: Constitution of Bangladesh & bdlaws.gov.bd · AI-generated analysis is an aid, not a substitute for legal opinion',
+  needDraft:'Please provide the draft text — at least a few sections.',analysing:'Analysing…',errStage:'This stage failed — press ↻ to retry.',
+  copied:'Report text copied ✓'}
+};
+function setLang(l){S.lang=l;store.set('ain_lang',l);
+  document.getElementById('lgBn').classList.toggle('on',l==='bn');
+  document.getElementById('lgEn').classList.toggle('on',l==='en');
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(I18N[l][k])el.textContent=I18N[l][k];});
+  if(S.s1)renderAll();
+}
+const T=k=>I18N[S.lang][k]||k;
+
+/* ================= tabs ================= */
+function tab(id,btn){document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pane-'+id).classList.add('on');
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+
+/* ================= Claude API ================= */
+async function callClaude(prompt,useSearch){
+  const body={model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]};
+  if(useSearch)body.tools=[{type:'web_search_20250305',name:'web_search'}];
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!d.content)throw new Error(d.error?.message||'API error');
+  return d.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+}
+function pickJSON(raw){
+  const a=raw.indexOf('{'),b=raw.lastIndexOf('}');
+  if(a<0||b<=a)throw new Error('no JSON');
+  return JSON.parse(raw.slice(a,b+1).replace(/```json|```/g,''));
+}
+function meta(){return{name:val('fName')||'—',ministry:val('fMinistry')||'—',type:val('fType'),
+  ref:val('fRef')||'—',date:val('fDate')||'—'};}
+function val(id){return document.getElementById(id).value.trim();}
+function draftText(){const d=val('fDraft');return d.length>9000?d.slice(0,9000)+'\n…[দীর্ঘ খসড়া — প্রথম ৯০০০ অক্ষর]':d;}
+
+const BASE=()=>`আপনি গণপ্রজাতন্ত্রী বাংলাদেশ সরকারের মন্ত্রিপরিষদ বিভাগের আন্তঃমন্ত্রণালয় কমিটির বিশেষজ্ঞ আইন-পরীক্ষক (legislative vetting expert)। গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান ও বাংলাদেশের প্রচলিত আইন (সূত্র: bdlaws.minlaw.gov.bd) অনুযায়ী নিচের খসড়াটি পরীক্ষা করুন। ${CONST_REF}
+খসড়ার নাম: ${meta().name} | ধরন: ${meta().type} | প্রেরক: ${meta().ministry}
+খসড়ার পাঠ:
+"""${draftText()}"""
+`;
+
+/* ---------- stage prompts ---------- */
+function p1(){return BASE()+`
+নিম্নলিখিত ১০টি পর্যালোচনা-ক্ষেত্রে ০-১০০ স্কোর ও ≤১৫ শব্দের বাংলা নোট দিন, সাংবিধানিক যাচাই ও চূড়ান্ত মতামত দিন।
+শুধুমাত্র বৈধ JSON দিন — কোনো ভূমিকা/ব্যাখ্যা/markdown নয়। সব টেক্সট বাংলায়, সংক্ষিপ্ত।
+{"verdict":"acceptable|acceptable_with_amendments|reconsider|not_acceptable",
+"verdict_reason":"≤২৫ শব্দ",
+"scores":[{"id":"const|laws|defs|admin|fiscal|impl|coord|rights|penalty|rules","score":0-100,"note":"≤১৫ শব্দ"} ×১০টি ঠিক এই ক্রমে],
+"constitution":[{"article":"অনুচ্ছেদ নম্বর","status":"ok|risk|conflict","issue":"≤১৫ শব্দ"} সর্বোচ্চ ৫টি]}`;}
+function p2(){return BASE()+`
+খসড়ার সবচেয়ে গুরুত্বপূর্ণ সর্বোচ্চ ৬টি ধারার ধারাভিত্তিক পরীক্ষা এবং সর্বোচ্চ ৪টি সংশোধনী প্রস্তাব দিন।
+শুধুমাত্র বৈধ JSON, সব টেক্সট বাংলায় ও ≤১৮ শব্দ প্রতি ফিল্ড:
+{"sections":[{"ref":"ধারা X","summary":"…","observation":"…","recommendation":"…","severity":"high|mid|low"}],
+"amendments":[{"ref":"ধারা X","proposal":"…","rationale":"…"}]}`;}
+function p3(){return BASE()+`
+টেমপ্লেটের অনুচ্ছেদ ৫,৬,৭,১০ অনুযায়ী দিন। শুধুমাত্র বৈধ JSON, বাংলায়, প্রতিটি ফিল্ড ≤১৮ শব্দ:
+{"fin":{"budget":"অতিরিক্ত বাজেট প্রয়োজন কি না+কেন","posts":"নতুন পদ সৃষ্টি","infra":"অবকাঠামো/আইটি","existing":"বিদ্যমান কাঠামোয় সম্ভব কি না","timeline":"বাস্তবায়ন সময়সীমা"},
+"interministry":[{"ministry":"নাম","stance":"সম্মতি|আপত্তি|আংশিক সম্মতি","comment":"…"} সর্বোচ্চ ৪],
+"key_observations":["…" সর্বোচ্চ ৫],
+"recommendations":["…" সর্বোচ্চ ৫]}`;}
+function p4(){return BASE()+`
+bdlaws.minlaw.gov.bd-এ (প্রয়োজনে সর্বোচ্চ ২টি ওয়েব-অনুসন্ধান) এই খসড়ার সঙ্গে সম্পর্কিত/ওভারল্যাপকারী বাংলাদেশের প্রচলিত আইন খুঁজুন।
+শুধুমাত্র বৈধ JSON, বাংলায়:
+{"related_laws":[{"name":"আইনের পূর্ণ নাম, সাল","act_no":"bdlaws act নম্বর বা null","relation":"সম্পর্ক ≤১২ শব্দ"} সর্বোচ্চ ৬]}`;}
+
+/* ================= pipeline ================= */
+let running=false;
+async function runPipeline(){
+  if(running)return;
+  if(val('fDraft').length<60){alert(T('needDraft'));return;}
+  running=true;
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('runBtn').innerHTML='<span class="spin"></span> '+T('analysing');
+  document.getElementById('steps').classList.add('show');
+  S.s1=S.s2=S.s3=S.s4=null;S.chat=[];
+  for(let i=1;i<=4;i++)setStep(i,'');
+  await doStage(1);await doStage(2);await doStage(3);
+  if(document.getElementById('fWeb').checked)await doStage(4);else setStep(4,'done');
+  running=false;
+  document.getElementById('runBtn').disabled=false;
+  document.getElementById('runBtn').textContent=T('btnRun');
+}
+async function doStage(n){
+  setStep(n,'run');
+  try{
+    if(n===1)S.s1=fix1(pickJSON(await callClaude(p1(),false)));
+    if(n===2)S.s2=pickJSON(await callClaude(p2(),false));
+    if(n===3)S.s3=pickJSON(await callClaude(p3(),false));
+    if(n===4)S.s4=pickJSON(await callClaude(p4(),true));
+    setStep(n,'done');renderAll();
+  }catch(e){console.error('stage'+n,e);setStep(n,'err');}
+}
+async function retry(n){setStep(n,'run');await doStage(n);}
+function setStep(n,cls){const el=document.getElementById('st'+n);
+  el.className='step'+(cls?' '+cls:'');
+  el.querySelector('.retry').style.display=cls==='err'?'inline-block':'none';}
+function fix1(j){ // guarantee 10 scores in canonical order
+  const map={};(j.scores||[]).forEach(s=>map[s.id]=s);
+  j.scores=AREAS.map(a=>map[a.id]||{id:a.id,score:50,note:'—'});
+  return j;}
+
+/* ================= renderers ================= */
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function scoreColor(v){return v>=75?'linear-gradient(90deg,#4ED9A4,#7FE8C4)':v>=50?'linear-gradient(90deg,#D9B24A,#F0CE6E)':'linear-gradient(90deg,#F26D6D,#F2A05B)';}
+
+function renderAll(){
+  if(S.s1)renderDash();
+  if(S.s2)renderSec();
+  if(S.s3)renderFin();
+  if(S.s4)renderRel();
+  renderReport();
+}
+function renderDash(){
+  document.getElementById('dashEmpty').style.display='none';
+  document.getElementById('dashBody').style.display='block';
+  const v=VERDICTS[S.s1.verdict]||VERDICTS.reconsider;
+  document.getElementById('vTitle').textContent=v[S.lang];
+  document.getElementById('vTitle').style.color=v.c;
+  document.getElementById('vReason').textContent=S.s1.verdict_reason||'';
+  const avg=Math.round(S.s1.scores.reduce((a,s)=>a+(+s.score||0),0)/10);
+  document.getElementById('vAvg').textContent=(S.lang==='bn'?'সমন্বিত স্কোর: ':'Composite score: ')+avg+' / 100';
+  drawSeal(v,avg);
+  // ledger
+  const L=document.getElementById('ledger');L.innerHTML='';
+  S.s1.scores.forEach((s,i)=>{
+    const a=AREAS[i];
+    const row=document.createElement('div');row.className='lrow';
+    row.innerHTML=`<div class="lname">${a[S.lang]}</div>
+      <div class="lbar"><div class="lfill" style="background:${scoreColor(s.score)}"></div></div>
+      <div class="lval">${s.score}</div>
+      <div class="lnote">${esc(s.note)}</div>`;
+    row.onclick=()=>row.classList.toggle('open');
+    L.appendChild(row);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{row.querySelector('.lfill').style.width=Math.max(3,+s.score||0)+'%';}));
+  });
+  // constitution chips
+  const C=document.getElementById('constChips');C.innerHTML='';
+  const stc={ok:'#4ED9A4',risk:'#F2B84B',conflict:'#F26D6D'};
+  (S.s1.constitution||[]).forEach(c=>{
+    const el=document.createElement('a');el.className='chip';el.target='_blank';el.rel='noopener';
+    el.href='http://bdlaws.minlaw.gov.bd/act-367.html';
+    el.innerHTML=`<span class="st" style="background:${stc[c.status]||'#8FA3BF'}"></span><b>${esc(c.article)}</b> — ${esc(c.issue)}`;
+    C.appendChild(el);
+  });
+  if(!(S.s1.constitution||[]).length)C.innerHTML='<span class="hint">—</span>';
+}
+function drawSeal(v,avg){
+  const svg=document.getElementById('sealSvg');
+  const ring='গণপ্রজাতন্ত্রী বাংলাদেশ সরকার • মন্ত্রিপরিষদ বিভাগ • আন্তঃমন্ত্রণালয় কমিটি • ';
+  svg.innerHTML=`
+  <defs><path id="ringP" d="M105,105 m -78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
+  <circle cx="105" cy="105" r="100" fill="rgba(217,178,74,.04)" stroke="${v.c}" stroke-width="2.5"/>
+  <circle cx="105" cy="105" r="92" fill="none" stroke="${v.c}" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>
+  <circle cx="105" cy="105" r="58" fill="rgba(6,11,24,.5)" stroke="${v.c}" stroke-width="1.5"/>
+  <text font-family="Hind Siliguri" font-size="11.5" fill="${v.c}" letter-spacing="1">
+    <textPath href="#ringP">${ring}</textPath></text>
+  <text x="105" y="96" text-anchor="middle" font-family="Hind Siliguri" font-weight="700" font-size="14" fill="${v.c}">
+    ${v.bn.length>16?v.bn.replace(' ','\u00A0').split('\u00A0')[0]:v.bn}</text>
+  <text x="105" y="114" text-anchor="middle" font-family="Hind Siliguri" font-weight="600" font-size="12" fill="${v.c}" opacity=".9">
+    ${v.bn.length>16?v.bn.slice(v.bn.indexOf(' ')+1):''}</text>
+  <text x="105" y="138" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#E9EFF8">${avg}/100</text>`;
+  svg.classList.remove('stamped');void svg.getBoundingClientRect();
+  setTimeout(()=>svg.classList.add('stamped'),60);
+}
+function renderSec(){
+  document.getElementById('secEmpty').style.display='none';
+  document.getElementById('secBody').style.display='block';
+  const sv={high:S.lang==='bn'?'উচ্চ':'High',mid:S.lang==='bn'?'মধ্যম':'Mid',low:S.lang==='bn'?'নিম্ন':'Low'};
+  document.getElementById('secRows').innerHTML=(S.s2.sections||[]).map(s=>
+   `<tr><td>${esc(s.ref)}</td><td>${esc(s.summary)}</td><td>${esc(s.observation)}</td>
+    <td>${esc(s.recommendation)}</td><td><span class="sev ${esc(s.severity)}">${sv[s.severity]||s.severity}</span></td></tr>`).join('');
+  document.getElementById('amendRows').innerHTML=(S.s2.amendments||[]).map(a=>
+   `<tr><td>${esc(a.ref)}</td><td>${esc(a.proposal)}</td><td>${esc(a.rationale)}</td></tr>`).join('');
+}
+function renderFin(){
+  document.getElementById('finEmpty').style.display='none';
+  document.getElementById('finBody').style.display='block';
+  const f=S.s3.fin||{};
+  const rows=[['৭.১ অতিরিক্ত বাজেট প্রয়োজন কি না',f.budget],['৭.২ নতুন পদ সৃষ্টি হবে কি না',f.posts],
+   ['৭.৩ অবকাঠামো/আইটি সহায়তা',f.infra],['৭.৪ বিদ্যমান কাঠামোয় বাস্তবায়ন',f.existing],['৭.৫ বাস্তবায়নের সময়সীমা',f.timeline]];
+  document.getElementById('finRows').innerHTML=rows.map(r=>`<tr><td style="white-space:normal;font-family:var(--bn);color:var(--muted)">${r[0]}</td><td>${esc(r[1]||'—')}</td></tr>`).join('');
+  document.getElementById('imRows').innerHTML=(S.s3.interministry||[]).map(m=>
+   `<tr><td style="white-space:normal">${esc(m.ministry)}</td><td>${esc(m.stance)}</td><td>${esc(m.comment)}</td></tr>`).join('');
+  document.getElementById('keyObs').innerHTML=(S.s3.key_observations||[]).map(o=>`<li>${esc(o)}</li>`).join('')||'<li class="hint">—</li>';
+  document.getElementById('recList').innerHTML=(S.s3.recommendations||[]).map(r=>`<li>${esc(r)}</li>`).join('');
+}
+function renderRel(){
+  const R=document.getElementById('relChips');R.innerHTML='';
+  (S.s4.related_laws||[]).forEach(l=>{
+    const el=document.createElement('a');el.className='chip';el.target='_blank';el.rel='noopener';
+    el.href=l.act_no?`http://bdlaws.minlaw.gov.bd/act-${String(l.act_no).replace(/\D/g,'')}.html`
+      :'http://bdlaws.minlaw.gov.bd/laws-of-bangladesh-alphabetical-index.html';
+    el.innerHTML=`<b>${l.act_no?('Act '+esc(l.act_no)):'bdlaws'}</b> ${esc(l.name)} — <span style="color:var(--muted)">${esc(l.relation)}</span>`;
+    R.appendChild(el);
+  });
+  if(!(S.s4.related_laws||[]).length)R.innerHTML='<span class="hint">—</span>';
+}
+
+/* ================= report ================= */
+function dots(s){return s&&s!=='—'?esc(s):'………………………………';}
+function renderReport(){
+  if(!S.s1)return;
+  const m=meta(),v=VERDICTS[S.s1.verdict]||VERDICTS.reconsider;
+  const chk=k=>S.s1.verdict===k?'☑':'☐';
+  const scoreRows=S.s1.scores.map((s,i)=>`<tr><td>${AREAS[i].bn}</td><td>${esc(s.note)} (স্কোর: ${s.score}/১০০)</td></tr>`).join('');
+  const secRows=(S.s2?.sections||[]).map(s=>`<tr><td>${esc(s.ref)}</td><td>${esc(s.summary)}</td><td>${esc(s.observation)}</td><td>${esc(s.recommendation)}</td><td>${esc(s.severity==='high'?'উচ্চ':s.severity==='mid'?'মধ্যম':'নিম্ন')}</td></tr>`).join('')
+    ||'<tr><td colspan="5" class="c">— ধাপ ২ অসম্পন্ন —</td></tr>';
+  const amRows=(S.s2?.amendments||[]).map(a=>`<tr><td>${esc(a.ref)}</td><td>${esc(a.proposal)}</td><td>${esc(a.rationale)}</td></tr>`).join('')||'<tr><td colspan="3" class="c">—</td></tr>';
+  const imRows=(S.s3?.interministry||[]).map(x=>`<tr><td>${esc(x.ministry)}</td><td>${esc(x.comment)}</td><td>${esc(x.stance)}</td><td>—</td></tr>`).join('')||'<tr><td colspan="4" class="c">—</td></tr>';
+  const f=S.s3?.fin||{};
+  const obs=(S.s3?.key_observations||[]).map(o=>`<li>${esc(o)}</li>`).join('');
+  const recs=(S.s3?.recommendations||[]).map((r,i)=>`${['১','২','৩','৪','৫'][i]||i+1}. ${esc(r)}`).join('<br>');
+  const rel=(S.s4?.related_laws||[]).map(l=>esc(l.name)).join('; ');
+  const constT=(S.s1.constitution||[]).map(c=>`অনুচ্ছেদ ${esc(c.article)}: ${esc(c.issue)}`).join('; ')||'—';
+
+  document.getElementById('reportPaper').innerHTML=`
+  <h3>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</h3>
+  <h3>মন্ত্রিপরিষদ বিভাগ</h3>
+  <h3>আন্তঃমন্ত্রণালয় কমিটি</h3>
+  <h3 style="margin-top:8px;text-decoration:underline">আইনের খসড়া পরীক্ষা-নিরীক্ষা পূর্বক মতামত প্রতিবেদন</h3>
+  <div class="memoline"><span><b>স্মারক নং:</b> ${dots(m.ref)}</span><span><b>তারিখ:</b> ${dots(m.date)}</span></div>
+
+  <h4>১. খসড়ার বিবরণ</h4>
+  <table><tr><th style="width:38%">বিষয়</th><th>বিবরণ</th></tr>
+  <tr><td>১.১ খসড়া আইনের নাম</td><td>${dots(m.name)}</td></tr>
+  <tr><td>১.২ প্রেরণকারী মন্ত্রণালয়/বিভাগ</td><td>${dots(m.ministry)}</td></tr>
+  <tr><td>১.৩ খসড়ার ধরন</td><td>${esc(m.type)}</td></tr>
+  <tr><td>১.৪ প্রাপ্তির তারিখ</td><td>${dots(m.date)}</td></tr>
+  <tr><td>১.৫ রেফারেন্স/স্মারক নং</td><td>${dots(m.ref)}</td></tr></table>
+
+  <h4>২. প্রস্তাবনার উদ্দেশ্য ও প্রেক্ষাপট</h4>
+  <p>${esc(S.s1.verdict_reason||'')} ${rel?('সংশ্লিষ্ট প্রচলিত আইন: '+rel+'।'):''}</p>
+
+  <h4>৩. পর্যালোচনার পরিধি</h4>
+  <p>কমিটি নিম্নবিষয়সমূহের ভিত্তিতে খসড়া পর্যালোচনা করেছে (এআই-সহায়িত স্কোরসহ):</p>
+  <table><tr><th style="width:38%">পর্যালোচনার ক্ষেত্র</th><th>পর্যবেক্ষণ</th></tr>${scoreRows}</table>
+  <p style="margin-top:6px"><b>সাংবিধানিক টীকা:</b> ${constT}</p>
+
+  <h4>৪. ধারাভিত্তিক পরীক্ষা-নিরীক্ষা</h4>
+  <table><tr><th>ধারা/উপধারা</th><th>বর্তমান পাঠের সারাংশ</th><th>পর্যবেক্ষণ</th><th>সুপারিশ</th><th>গুরুত্ব</th></tr>${secRows}</table>
+
+  <h4>৫. মূল পর্যবেক্ষণ</h4><ul>${obs||'<li>—</li>'}</ul>
+
+  <h4>৬. আন্তঃমন্ত্রণালয় মন্তব্য (এআই-অনুমিত খসড়া — যাচাই সাপেক্ষ)</h4>
+  <table><tr><th>সংশ্লিষ্ট মন্ত্রণালয়/বিভাগ</th><th>মন্তব্য</th><th>সম্মতি/আপত্তি</th><th>প্রস্তাবিত পদক্ষেপ</th></tr>${imRows}</table>
+
+  <h4>৭. আর্থিক ও প্রশাসনিক বিশ্লেষণ</h4>
+  <table><tr><th style="width:38%">বিষয়</th><th>বিশ্লেষণ</th></tr>
+  <tr><td>৭.১ অতিরিক্ত বাজেট প্রয়োজন কি না</td><td>${dots(f.budget)}</td></tr>
+  <tr><td>৭.২ নতুন পদ সৃষ্টি হবে কি না</td><td>${dots(f.posts)}</td></tr>
+  <tr><td>৭.৩ অবকাঠামো/আইটি সহায়তা লাগবে কি না</td><td>${dots(f.infra)}</td></tr>
+  <tr><td>৭.৪ বিদ্যমান কাঠামোয় বাস্তবায়ন সম্ভব কি না</td><td>${dots(f.existing)}</td></tr>
+  <tr><td>৭.৫ বাস্তবায়নের সময়সীমা</td><td>${dots(f.timeline)}</td></tr></table>
+
+  <h4>৮. সংশোধনী প্রস্তাব</h4>
+  <table><tr><th>ধারা/উপধারা</th><th>প্রস্তাবিত সংশোধন</th><th>যুক্তি</th></tr>${amRows}</table>
+
+  <h4>৯. চূড়ান্ত মতামত</h4>
+  <table><tr><th>সিদ্ধান্ত</th><th class="c" style="width:90px">চিহ্নিত করুন</th></tr>
+  <tr><td>নীতিগতভাবে গ্রহণযোগ্য</td><td class="c">${chk('acceptable')}</td></tr>
+  <tr><td>সংশোধন সাপেক্ষে গ্রহণযোগ্য</td><td class="c">${chk('acceptable_with_amendments')}</td></tr>
+  <tr><td>অধিকতর পুনর্বিবেচনা প্রয়োজন</td><td class="c">${chk('reconsider')}</td></tr>
+  <tr><td>বর্তমান অবস্থায় গ্রহণযোগ্য নয়</td><td class="c">${chk('not_acceptable')}</td></tr></table>
+  <p><b>মতামত/মন্তব্য:</b> ${esc(S.s1.verdict_reason||'')}</p>
+
+  <h4>১০. সুপারিশ</h4><p>${recs||'—'}</p>
+
+  <h4>১১. স্বাক্ষর</h4>
+  <table><tr><th>নাম</th><th>পদবি</th><th>স্বাক্ষর</th><th>তারিখ</th></tr>
+  <tr><td>………………</td><td>সভাপতি</td><td>………………</td><td>………………</td></tr>
+  <tr><td>………………</td><td>সদস্যসচিব</td><td>………………</td><td>………………</td></tr>
+  <tr><td>………………</td><td>সদস্য</td><td>………………</td><td>………………</td></tr></table>
+  <p style="margin-top:14px;font-size:11.5px;color:#666">* এই খসড়া-প্রতিবেদন এআই-সহায়তায় প্রস্তুত; কমিটির চূড়ান্ত অনুমোদন ও স্বাক্ষর সাপেক্ষে কার্যকর। সূত্র: গণপ্রজাতন্ত্রী বাংলাদেশের সংবিধান ও bdlaws.gov.bd।</p>`;
+}
+function copyReport(){
+  const t=document.getElementById('reportPaper').innerText;
+  navigator.clipboard.writeText(t).then(()=>alert(T('copied'))).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();alert(T('copied'));});
+}
+
+/* ================= follow-up chat ================= */
+async function sendChat(){
+  const q=val('chatIn');if(!q)return;
+  document.getElementById('chatIn').value='';
+  addMsg('u',q);
+  const ctx=S.s1?`পূর্ববর্তী এআই-পর্যালোচনার সারাংশ: মতামত=${(VERDICTS[S.s1.verdict]||{}).bn}; কারণ=${S.s1.verdict_reason}; সাংবিধানিক টীকা=${(S.s1.constitution||[]).map(c=>c.article+':'+c.issue).join('; ')}`:'';
+  S.chat.push({role:'user',content:q});
+  const hist=S.chat.slice(-6);
+  const prompt=`আপনি মন্ত্রিপরিষদ বিভাগের আইন-পরীক্ষা কমিটির এআই-সহায়ক। বাংলাদেশের সংবিধান ও bdlaws.gov.bd-এর প্রচলিত আইনের আলোকে সংক্ষিপ্ত (≤১২০ শব্দ), সুনির্দিষ্ট বাংলা উত্তর দিন। অনুচ্ছেদ/ধারা উল্লেখ করুন।
+খসড়া (${meta().name}):"""${val('fDraft').slice(0,4000)}"""
+${ctx}
+কথোপকথন:
+${hist.map(m=>(m.role==='user'?'প্রশ্ন: ':'উত্তর: ')+m.content).join('\n')}
+উত্তর:`;
+  const hold=addMsg('a','…');
+  try{
+    const ans=await callClaude(prompt,false);
+    hold.textContent=ans.trim();
+    S.chat.push({role:'assistant',content:ans.trim()});
+  }catch(e){hold.textContent='⚠ '+e.message;}
+}
+function addMsg(cls,txt){
+  const log=document.getElementById('chatlog');
+  const d=document.createElement('div');d.className='msg '+cls;d.textContent=txt;
+  log.appendChild(d);log.scrollTop=log.scrollHeight;return d;
+}
+
+/* ================= sample ================= */
+function loadSample(){
+  document.getElementById('fName').value='উপাত্ত সুরক্ষা আইন, ২০২৬ (খসড়া)';
+  document.getElementById('fMinistry').value='ডাক, টেলিযোগাযোগ ও তথ্যপ্রযুক্তি মন্ত্রণালয়';
+  document.getElementById('fType').value='আইন';
+  document.getElementById('fRef').value='৫৬.০০.০০০০.০২৮.২২.০০৪.২৬';
+  document.getElementById('fDate').value='০১-০৭-২০২৬';
+  document.getElementById('fDraft').value=
+`ধারা ১। সংক্ষিপ্ত শিরোনাম ও প্রবর্তন — (১) এই আইন উপাত্ত সুরক্ষা আইন, ২০২৬ নামে অভিহিত হইবে। (২) সরকার, সরকারি গেজেটে প্রজ্ঞাপন দ্বারা, যেই তারিখ নির্ধারণ করিবে সেই তারিখে ইহা কার্যকর হইবে।
+
+ধারা ২। সংজ্ঞা — বিষয় বা প্রসঙ্গের পরিপন্থী কোনো কিছু না থাকিলে, এই আইনে— (ক) "উপাত্ত" অর্থ ডিজিটাল বা অন্য কোনো মাধ্যমে সংরক্ষিত তথ্য; (খ) "ব্যক্তিগত উপাত্ত" অর্থ কোনো শনাক্তযোগ্য ব্যক্তি সম্পর্কিত উপাত্ত; (গ) "নিয়ন্ত্রক" অর্থ ধারা ৩-এর অধীন প্রতিষ্ঠিত উপাত্ত সুরক্ষা কর্তৃপক্ষ।
+
+ধারা ৩। উপাত্ত সুরক্ষা কর্তৃপক্ষ প্রতিষ্ঠা — (১) সরকার একটি উপাত্ত সুরক্ষা কর্তৃপক্ষ প্রতিষ্ঠা করিবে। (২) কর্তৃপক্ষের চেয়ারম্যান ও সদস্যগণ সরকার কর্তৃক নিযুক্ত হইবেন এবং সরকারের নিকট দায়ী থাকিবেন।
+
+ধারা ৪। উপাত্ত স্থানীয়করণ — সকল সংবেদনশীল ব্যক্তিগত উপাত্ত বাংলাদেশের ভূখণ্ডে অবস্থিত সার্ভারে সংরক্ষণ করিতে হইবে; কর্তৃপক্ষের পূর্বানুমোদন ব্যতীত সীমান্ত-অতিক্রমী স্থানান্তর নিষিদ্ধ।
+
+ধারা ৫। দণ্ড — এই আইনের কোনো বিধান লঙ্ঘন করিলে অনধিক ৫ বৎসর কারাদণ্ড বা অনধিক ৫ কোটি টাকা অর্থদণ্ড বা উভয় দণ্ডে দণ্ডিত হইবেন। লঙ্ঘন আমলযোগ্য ও অজামিনযোগ্য হইবে।
+
+ধারা ৬। জাতীয় নিরাপত্তা ব্যতিক্রম — জাতীয় নিরাপত্তা, জনশৃঙ্খলা বা রাষ্ট্রের সার্বভৌমত্ব রক্ষার্থে সরকার যেকোনো সংস্থাকে এই আইনের যেকোনো বিধানের প্রয়োগ হইতে অব্যাহতি দিতে পারিবে।
+
+ধারা ৭। বিধি প্রণয়নের ক্ষমতা — এই আইনের উদ্দেশ্য পূরণকল্পে সরকার, সরকারি গেজেটে প্রজ্ঞাপন দ্বারা, বিধি প্রণয়ন করিতে পারিবে।`;
+}
+
+/* init */
+setLang(S.lang);
+</script>
+</body>
+</html>
