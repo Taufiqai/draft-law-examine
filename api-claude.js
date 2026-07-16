@@ -1,23 +1,25 @@
 // ============================================================
-// api/claude.js — Vercel Serverless Proxy for the Law-Draft
-// Scrutiny Dashboard (ain-khosra-ai-dashboard)
+// api/claude.js — Vercel Serverless Proxy (CommonJS — works on
+// any Vercel project, no package.json needed)
 //
 // Repo layout:
-//   /index.html          ← ain-khosra-ai-dashboard.html (renamed)
-//   /api/claude.js       ← this file (path must be exactly api/claude.js)
+//   /index.html      ← the dashboard (renamed)
+//   /api/claude.js   ← this file (path must be exactly api/claude.js)
 //
-// Vercel setup (one time):
+// Vercel one-time setup:
 //   Project → Settings → Environment Variables
-//   ANTHROPIC_API_KEY = sk-ant-xxxxxxxx   (Production + Preview)
-//   → Redeploy
+//   ANTHROPIC_API_KEY = sk-ant-xxxxxxxx  (Production + Preview)
+//   → Deployments → ⋯ → Redeploy
 //
-// The dashboard automatically tries POST /api/claude first when
-// no key is entered in the UI, so no front-end change is needed.
+// Verify after deploy: open  https://<your-app>.vercel.app/api/claude
+// in the browser — it must return {"error":{"message":"POST only"}}.
+// If it shows 404 or the file's source code, the function did not
+// deploy: check the folder is named exactly "api" at repo root.
 // ============================================================
 
-const MAX_BODY = 200_000; // ~200 KB guard for oversized payloads
+const MAX_BODY = 200000; // ~200 KB payload guard
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: { message: 'POST only' } });
     return;
@@ -57,4 +59,4 @@ export default async function handler(req, res) {
   } catch (e) {
     res.status(500).json({ error: { message: String(e) } });
   }
-}
+};

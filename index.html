@@ -72,6 +72,8 @@ textarea{min-height:230px;resize:vertical;line-height:1.7}
 .upmeta{font-size:12px;color:var(--muted)}
 details.apibox{margin-top:12px;border:1px solid rgba(143,163,191,.2);border-radius:9px;padding:8px 12px;font-size:13px}
 details.apibox summary{cursor:pointer;color:var(--muted);font-weight:600}
+#connOut{margin-top:10px;padding:10px;border:1px solid var(--line2);border-radius:8px;background:var(--void);
+  font-family:var(--bn);font-size:12.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
 .stageerr{display:none;color:var(--bad);font-size:12.5px;line-height:1.5;padding:8px 10px;border:1px solid rgba(242,109,109,.3);border-radius:8px;background:rgba(242,109,109,.06)}
 
 /* ---------- pipeline stepper ---------- */
@@ -243,7 +245,9 @@ footer{padding:26px 22px;text-align:center;color:var(--dim);font-size:12px;borde
     <details class="apibox"><summary data-i="apiH">🔑 API সংযোগ সেটিংস (Vercel/লোকাল-এ চালালে)</summary>
       <label data-i="apiLbl">Anthropic API Key</label>
       <input type="password" id="fKey" placeholder="sk-ant-…" autocomplete="off"
-        onchange="store.set('ain_key',this.value.trim())">
+        oninput="store.set('ain_key',this.value.trim())">
+      <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="testConn()" data-i="btnTest">⚡ সংযোগ পরীক্ষা করুন</button>
+      <pre id="connOut" style="display:none"></pre>
       <div class="hint" data-i="apiHint">Claude.ai artifact-এর ভেতরে চালালে ফাঁকা রাখুন — কী লাগে না। Vercel বা লোকাল ফাইলে চালালে হয় এখানে আপনার API কী দিন (কী শুধু এই ব্রাউজারের localStorage-এ থাকে, ফাইলে নয়), নয়তো রিপোতে /api/claude সার্ভারলেস প্রক্সি যুক্ত করুন।</div>
     </details>
 
@@ -428,7 +432,7 @@ const I18N={
   apiHint:'Claude.ai artifact-এর ভেতরে চালালে ফাঁকা রাখুন — কী লাগে না। Vercel বা লোকাল ফাইলে চালালে হয় এখানে আপনার API কী দিন (কী শুধু এই ব্রাউজারের localStorage-এ থাকে, ফাইলে নয়), নয়তো রিপোতে /api/claude সার্ভারলেস প্রক্সি যুক্ত করুন।',
   errAuth:'API কী নেই বা অবৈধ — "API সংযোগ সেটিংস"-এ বৈধ Anthropic API কী দিন, অথবা /api/claude প্রক্সির ANTHROPIC_API_KEY এনভায়রনমেন্ট ভেরিয়েবল যাচাই করুন।',
   errNet:'নেটওয়ার্ক/CORS ত্রুটি — পেজটি Claude.ai artifact-এর বাইরে চলছে। "API সংযোগ সেটিংস"-এ API কী দিন, অথবা Vercel রিপোতে /api/claude প্রক্সি যুক্ত করুন।',
-  errParse:'এআই-উত্তর JSON-এ পার্স করা যায়নি — ↻ চেপে আবার চেষ্টা করুন।',
+  errParse:'এআই-উত্তর JSON-এ পার্স করা যায়নি — ↻ চেপে আবার চেষ্টা করুন।',btnTest:'⚡ সংযোগ পরীক্ষা করুন',
   lblWeb:'bdlaws.minlaw.gov.bd-এ সংশ্লিষ্ট প্রচলিত আইন ওয়েব-অনুসন্ধান করবে',btnRun:'⚖ এআই পরীক্ষা-নিরীক্ষা চালান',
   btnSample:'নমুনা খসড়া লোড করুন (ডেমো)',
   hint:'বিশ্লেষণ ৪টি ধাপে চলে — মূল পর্যালোচনা → ধারাভিত্তিক → আর্থিক-প্রশাসনিক → bdlaws সংশ্লিষ্ট আইন। ফলাফল কমিটির টেমপ্লেট-প্রতিবেদনে স্বয়ংক্রিয়ভাবে বসে যায়।',
@@ -465,7 +469,7 @@ const I18N={
   apiHint:'Leave empty inside a Claude.ai artifact — no key needed. On Vercel or a local file, either enter your API key here (stored only in this browser\'s localStorage, never in the file) or add an /api/claude serverless proxy to the repo.',
   errAuth:'API key missing or invalid — enter a valid Anthropic API key in "API connection settings", or check ANTHROPIC_API_KEY on the /api/claude proxy.',
   errNet:'Network/CORS error — this page is running outside a Claude.ai artifact. Enter an API key in "API connection settings", or add the /api/claude proxy to your Vercel repo.',
-  errParse:'Could not parse the AI reply as JSON — press ↻ to retry.',
+  errParse:'Could not parse the AI reply as JSON — press ↻ to retry.',btnTest:'⚡ Test connection',
   lblWeb:'Web-search bdlaws.minlaw.gov.bd for related existing laws',btnRun:'⚖ Run AI scrutiny',btnSample:'Load sample draft (demo)',
   hint:'Analysis runs in 4 stages — core review → section-by-section → fiscal-administrative → bdlaws related laws. Results auto-populate the committee template report.',
   stp1:'Stage 1 · Core review (10 areas + constitutional check)',stp2:'Stage 2 · Section-by-section & amendments',
@@ -598,7 +602,8 @@ async function doStage(n){
   }catch(e){console.error('stage'+n,e);setStep(n,'err');
     const el=document.getElementById('stageErr');el.style.display='block';
     const msg=(e.message==='no JSON'||e instanceof SyntaxError)?T('errParse'):(e.message||String(e));
-    el.textContent='⚠ '+(S.lang==='bn'?'ধাপ ':'Stage ')+n+': '+msg;}
+    el.textContent='⚠ '+(S.lang==='bn'?'ধাপ ':'Stage ')+n+': '+msg;
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});}
 }
 async function retry(n){
   const el=document.getElementById('stageErr');el.style.display='none';el.textContent='';
@@ -884,6 +889,40 @@ async function pickFile(f){
         +' — '+text.length.toLocaleString(S.lang==='bn'?'bn-BD':'en-US')+' '+T('upChars');
   }catch(e){console.error(e);metaEl.textContent='⚠ '+T('upErr');}
   document.getElementById('fFile').value='';
+}
+
+/* ================= connection diagnostics ================= */
+async function testConn(){
+  const out=document.getElementById('connOut');
+  out.style.display='block';out.textContent='⏳ …';
+  const key=(store.get('ain_key')||'').trim();
+  const body=JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
+    messages:[{role:'user',content:'Reply with exactly: OK'}]});
+  const bn=S.lang==='bn';
+  const routes=[];
+  if(key)routes.push({n:bn?'১) সরাসরি API (আপনার কী)':'1) Direct API (your key)',
+    u:'https://api.anthropic.com/v1/messages',
+    h:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01',
+       'anthropic-dangerous-direct-browser-access':'true'}});
+  routes.push({n:(key?'২':'১')+') /api/claude '+(bn?'প্রক্সি':'proxy'),u:'/api/claude',
+    h:{'Content-Type':'application/json'}});
+  routes.push({n:(key?'৩':'২')+') '+(bn?'কী-বিহীন (শুধু Claude.ai artifact-এ চলে)':'keyless (works only inside Claude.ai artifact)'),
+    u:'https://api.anthropic.com/v1/messages',h:{'Content-Type':'application/json'}});
+  const lines=[];
+  for(const rt of routes){
+    try{
+      const r=await fetch(rt.u,{method:'POST',headers:rt.h,body});
+      const d=await r.json().catch(()=>null);
+      if(r.ok&&d&&d.content)lines.push('✅ '+rt.n+(bn?' — কাজ করছে':' — working'));
+      else lines.push('❌ '+rt.n+' — '+((d&&d.error&&d.error.message)||('HTTP '+r.status)));
+    }catch(e){lines.push('❌ '+rt.n+' — '+(e instanceof TypeError?(bn?'নেটওয়ার্ক/CORS ব্লকড':'network/CORS blocked'):(e.message||e)));}
+    out.textContent=lines.join('\n');
+  }
+  if(!lines.some(l=>l.startsWith('✅')))
+    lines.push('',bn?'→ সমাধান: উপরের ঘরে API কী বসান (সঙ্গে সঙ্গে কাজ করবে), অথবা রিপোতে api/claude.js ফাইল + Vercel-এ ANTHROPIC_API_KEY এনভায়রনমেন্ট ভেরিয়েবল দিয়ে Redeploy করুন।'
+      :'→ Fix: paste an API key above (works instantly), or add api/claude.js to the repo + set ANTHROPIC_API_KEY on Vercel and redeploy.');
+  else lines.push('',bn?'→ সংযোগ ঠিক আছে — এবার "এআই পরীক্ষা-নিরীক্ষা চালান" চাপুন।':'→ Connection OK — now press "Run AI scrutiny".');
+  out.textContent=lines.join('\n');
 }
 
 /* init */
